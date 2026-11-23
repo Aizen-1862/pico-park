@@ -2,65 +2,67 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
   <meta name="theme-color" content="#101827">
-  <title>CATNAP — Co-op Puzzle Park</title>
+  <title>CATNAP — 20 Stage Co-op Puzzle Park</title>
   <link rel="stylesheet" href="./style.css">
 </head>
 <body>
   <main class="app">
     <header class="topbar">
-      <a class="brand" href="#"><span class="brand-mark">✦</span> CATNAP <small>CO-OP PUZZLE PARK</small></a>
+      <a class="brand" href="#"><span class="brand-mark">✦</span> CATNAP <small>20-STAGE CO-OP</small></a>
       <div class="online"><i></i> ONLINE MULTIPLAYER</div>
     </header>
-
     <section id="lobby" class="lobby">
       <div class="hero">
-        <div class="eyebrow">TEAMWORK MAKES THE DREAM WORK</div>
-        <h1>Little paws.<br><em>Big teamwork.</em></h1>
-        <p>Run, jump, grab the key and get your whole crew to the exit. Nobody gets left behind.</p>
+        <div class="eyebrow">20 ROOMS. ONE TEAM. NO CAT LEFT BEHIND.</div>
+        <h1>Think together.<br><em>Escape together.</em></h1>
+        <p>Twenty tricky rooms packed with keys, switches and platform puzzles. The more teammates you bring, the more switches your crew must coordinate.</p>
         <div class="cat-row" aria-hidden="true"><span>🐱</span><span>🐱</span><span>🐱</span><span>🐱</span></div>
       </div>
       <div class="lobby-card">
         <label for="playerName">YOUR NAME</label>
         <input id="playerName" maxlength="14" placeholder="Player name" value="Player">
-        <button id="createBtn" class="primary">＋ Create a room</button>
-        <div class="or"><span></span> OR JOIN YOUR FRIENDS <span></span></div>
+        <button id="createBtn" class="primary">＋ CREATE A ROOM</button>
+        <div class="or"><span></span> OR JOIN YOUR TEAM <span></span></div>
         <div class="join-row">
           <input id="roomCode" maxlength="6" placeholder="ROOM CODE">
-          <button id="joinBtn" class="secondary">Join</button>
+          <button id="joinBtn" class="secondary">JOIN</button>
         </div>
         <p id="lobbyError" class="error"></p>
-        <div class="howto"><b>HOW TO PLAY</b><span>← → Move</span><span>Space / ↑ Jump</span><span>Collect the key together!</span></div>
+        <div class="howto"><b>CONTROLS</b><span>← → / A D Move</span><span>Space / ↑ / W Jump</span><span>Mobile: use on-screen controls</span></div>
       </div>
     </section>
 
     <section id="game" class="game hidden">
-      <div class="game-head">
-        <div><span class="eyebrow">YOUR ROOM</span><strong id="roomLabel">------</strong></div>
-        <button id="copyCode" class="copy">Copy code</button>
-        <div class="player-count"><b id="playerCount">1</b>/8 PLAYERS</div>
+      <canvas id="world" width="960" height="540" aria-label="Full-screen 2D cooperative platform game"></canvas>
+      <div class="hud-top-left">
+        <div class="stage-pill"><span id="stageLabel">STAGE 01 / 20</span><b id="stageName">First Steps</b></div>
+        <div class="mission-pill"><span id="missionText">Find the key and work together!</span><small id="switchProgress">0 / 1 SWITCHES</small></div>
       </div>
-      <div class="canvas-wrap">
-        <canvas id="world" width="960" height="540" aria-label="2D cooperative platform game"></canvas>
-        <div id="winOverlay" class="win-overlay hidden">
-          <div class="win-card"><div class="win-stars">✦ ✦ ✦</div><h2>TEAMWORK!</h2><p>Your whole crew made it!</p><button id="playAgain" class="primary">Play again</button></div>
-        </div>
+      <div class="hud-top-right">
+        <div class="room-pill"><small>ROOM CODE</small><strong id="roomCodeHud">------</strong><button id="copyCode">COPY</button></div>
+        <div class="count-pill"><b id="playerCount">1/8</b><span>PLAYERS</span></div>
+        <button id="leaveBtn" class="leave">✕ LEAVE</button>
       </div>
-      <div class="game-footer">
-        <div class="mission"><span class="mission-icon">🗝️</span><span id="missionText">Find the key!</span></div>
-        <div class="controls-hint">A / D or ← / → <b>MOVE</b> &nbsp; SPACE / W / ↑ <b>JUMP</b></div>
-        <button id="leaveBtn" class="leave">Leave room</button>
-      </div>
+      <div id="playersList" class="players-list"></div>
       <div class="mobile-controls">
         <button id="leftBtn" aria-label="Move left">◀</button>
         <button id="rightBtn" aria-label="Move right">▶</button>
         <button id="jumpBtn" aria-label="Jump">⤒</button>
       </div>
-      <div id="playersList" class="players-list"></div>
+      <div id="winOverlay" class="win-overlay hidden">
+        <div class="win-card">
+          <div class="win-stars">✦ ✦ ✦</div><h2 id="winTitle">STAGE CLEARED!</h2>
+          <p id="winMessage">Everyone made it. Ready for the next room?</p>
+          <button id="nextStage" class="primary">NEXT STAGE →</button>
+          <button id="restartCampaign" class="secondary wide">RESTART CAMPAIGN</button>
+        </div>
+      </div>
     </section>
     <footer>Made for friends who know that teamwork is the real superpower.</footer>
   </main>
+  <script src="./levels.js"></script>
   <script src="./game.js"></script>
 </body>
 </html>
