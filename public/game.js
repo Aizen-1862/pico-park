@@ -13,8 +13,8 @@
   const setError = text => $("lobbyError").textContent = text || "";
   function connect(action, code) {
     setError("");
-    const protocol = location.protocol === "https:" ? "wss:" : "ws:";
-    socket = new WebSocket(protocol + "//" + location.host);
+    const serverUrl = "wss://pico-park-multiplayer.onrender.com";
+    socket = new WebSocket(serverUrl);
     socket.onopen = () => send({type:action, name:$("playerName").value.trim() || "Player", code});
     socket.onmessage = event => {
       const msg = JSON.parse(event.data);
