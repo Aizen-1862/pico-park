@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <meta name="theme-color" content="#101827">
+  <title>CATNAP — Co-op Puzzle Park</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <main class="app">
+    <header class="topbar">
+      <a class="brand" href="#"><span class="brand-mark">✦</span> CATNAP <small>CO-OP PUZZLE PARK</small></a>
+      <div class="online"><i></i> ONLINE MULTIPLAYER</div>
+    </header>
+
+    <section id="lobby" class="lobby">
+      <div class="hero">
+        <div class="eyebrow">TEAMWORK MAKES THE DREAM WORK</div>
+        <h1>Little paws.<br><em>Big teamwork.</em></h1>
+        <p>Run, jump, grab the key and get your whole crew to the exit. Nobody gets left behind.</p>
+        <div class="cat-row" aria-hidden="true"><span>🐱</span><span>🐱</span><span>🐱</span><span>🐱</span></div>
+      </div>
+      <div class="lobby-card">
+        <label for="playerName">YOUR NAME</label>
+        <input id="playerName" maxlength="14" placeholder="Player name" value="Player">
+        <button id="createBtn" class="primary">＋ Create a room</button>
+        <div class="or"><span></span> OR JOIN YOUR FRIENDS <span></span></div>
+        <div class="join-row">
+          <input id="roomCode" maxlength="6" placeholder="ROOM CODE">
+          <button id="joinBtn" class="secondary">Join</button>
+        </div>
+        <p id="lobbyError" class="error"></p>
+        <div class="howto"><b>HOW TO PLAY</b><span>← → Move</span><span>Space / ↑ Jump</span><span>Collect the key together!</span></div>
+      </div>
+    </section>
+
+    <section id="game" class="game hidden">
+      <div class="game-head">
+        <div><span class="eyebrow">YOUR ROOM</span><strong id="roomLabel">------</strong></div>
+        <button id="copyCode" class="copy">Copy code</button>
+        <div class="player-count"><b id="playerCount">1</b>/8 PLAYERS</div>
+      </div>
+      <div class="canvas-wrap">
+        <canvas id="world" width="960" height="540" aria-label="2D cooperative platform game"></canvas>
+        <div id="winOverlay" class="win-overlay hidden">
+          <div class="win-card"><div class="win-stars">✦ ✦ ✦</div><h2>TEAMWORK!</h2><p>Your whole crew made it!</p><button id="playAgain" class="primary">Play again</button></div>
+        </div>
+      </div>
+      <div class="game-footer">
+        <div class="mission"><span class="mission-icon">🗝️</span><span id="missionText">Find the key!</span></div>
+        <div class="controls-hint">A / D or ← / → <b>MOVE</b> &nbsp; SPACE / W / ↑ <b>JUMP</b></div>
+        <button id="leaveBtn" class="leave">Leave room</button>
+      </div>
+      <div class="mobile-controls">
+        <button id="leftBtn" aria-label="Move left">◀</button>
+        <button id="rightBtn" aria-label="Move right">▶</button>
+        <button id="jumpBtn" aria-label="Jump">⤒</button>
+      </div>
+      <div id="playersList" class="players-list"></div>
+    </section>
+    <footer>Made for friends who know that teamwork is the real superpower.</footer>
+  </main>
+  <script src="./game.js"></script>
+</body>
+</html>
