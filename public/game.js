@@ -18,7 +18,7 @@
         myId = msg.id; roomCode = msg.room; me.color = msg.color; joined = true;
         $("lobby").classList.add("hidden"); $("game").classList.remove("hidden");
         $("roomCodeHud").textContent = roomCode; $("winOverlay").classList.add("hidden");
-        if (raf) cancelAnimationFrame(raf); loop();
+        if (raf) cancelAnimationFrame(raf); loop(performance.now());
       }
       if (msg.type === "state") {
         stageNo = msg.stage; stageState = msg;
@@ -166,5 +166,5 @@
     ctx.fillStyle="#fff";ctx.fillRect(-8,10,7,3);ctx.fillRect(2,10,7,3);ctx.restore();
     ctx.fillStyle="#fff";ctx.font="bold 10px Nunito";ctx.textAlign="center";ctx.fillText(name,x+13,y-7);ctx.textAlign="left";
   }
-  function loop(t){const dt=Math.min(.033,(t-(loop.last||t))/1000);loop.last=t;update(dt);draw();raf=requestAnimationFrame(loop);}
+  function loop(t){t=Number.isFinite(t)?t:performance.now();const previous=Number.isFinite(loop.last)?loop.last:t;const dt=Math.max(0,Math.min(.033,(t-previous)/1000));loop.last=t;update(dt);draw();raf=requestAnimationFrame(loop);}
 })();
