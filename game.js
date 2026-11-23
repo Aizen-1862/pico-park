@@ -100,14 +100,14 @@
   }
   function update(dt) {
     if (!joined || stageState.stageClear || stageState.won) return;
-    const level=currentLevel(), platforms=level.platforms; if(me.trapped){me.vx=0;me.vy=0;return;}
+    const level=currentLevel(), platforms=level.platforms; if(me.trapped){me.vx=0;me.vy=0;return;} const obstacles=platforms.concat(!stageState.gateOpen&&level.gate?[{x:level.gate.x,y:level.gate.y,w:14,h:level.gate.h}]:[]);
     const left=keys.has("arrowleft")||keys.has("a"), right=keys.has("arrowright")||keys.has("d");
     const jump=keys.has(" ")||keys.has("arrowup")||keys.has("w");
     me.vx=left?-245:right?245:0; if(me.vx)me.facing=me.vx>0?1:-1;
-    const nx=Math.max(0,Math.min(level.worldWidth-27,me.x+me.vx*dt)); if(!collideX(nx,platforms))me.x=nx;
+    const nx=Math.max(0,Math.min(level.worldWidth-27,me.x+me.vx*dt)); if(!collideX(nx,obstacles))me.x=nx;
     if(jump&&me.onGround){me.vy=-535;me.onGround=false;}
     me.vy=Math.min(780,me.vy+1450*dt);
-    const ny=me.y+me.vy*dt; me.onGround=false; if(!collideY(ny,platforms))me.y=ny;
+    const ny=me.y+me.vy*dt; me.onGround=false; if(!collideY(ny,obstacles))me.y=ny;
     if(me.y>H+80){me.x=Math.max(48,me.x-220);me.y=460;me.vy=0;}
     const now=performance.now();
     if(now-lastSend>40){send({type:"move",x:me.x,y:me.y,facing:me.facing});lastSend=now;}
