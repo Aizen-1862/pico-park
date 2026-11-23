@@ -131,12 +131,14 @@
     ctx.fillStyle="#eaf5ff";ctx.font="bold 10px Nunito";ctx.textAlign="center";ctx.fillText("S"+(index+1),0,-17);ctx.restore();
   }
   function draw() {
-    const level=currentLevel(), t=performance.now(); const cameraX=Math.max(0,Math.min(level.worldWidth-W,me.x-390));
+    const level=currentLevel(), t=performance.now();
+    const cameraX=Math.max(0,Math.min(level.worldWidth-W,me.x-390));
     const sky=ctx.createLinearGradient(0,0,0,H);sky.addColorStop(0,"#182b46");sky.addColorStop(1,"#355c69");
     ctx.fillStyle=sky;ctx.fillRect(0,0,W,H);
     ctx.fillStyle="#ffffff12";for(let i=0;i<55;i++){const x=(i*173)%W,y=(i*79)%300;ctx.fillRect(x,y,2,2);}
     ctx.fillStyle="#8ac6a0";ctx.beginPath();ctx.moveTo(0,490);ctx.quadraticCurveTo(250,440,470,490);ctx.quadraticCurveTo(720,430,960,485);ctx.lineTo(960,540);ctx.lineTo(0,540);ctx.fill();
-    ctx.save();ctx.translate(-cameraX,0);level.platforms.forEach(drawPlatform);
+    ctx.save();ctx.translate(-cameraX,0);
+    level.platforms.forEach(drawPlatform);
     level.switches.forEach((sw,i)=>drawSwitch(sw,!!(stageState.switches||[])[i],i));
     if(!stageState.keyTaken){
       ctx.save();ctx.translate(level.key.x,level.key.y+Math.sin(t/240)*5);ctx.rotate(-.2);
@@ -144,17 +146,24 @@
       ctx.beginPath();ctx.arc(0,-7,10,0,Math.PI*2);ctx.moveTo(0,3);ctx.lineTo(0,24);ctx.lineTo(11,24);ctx.moveTo(0,15);ctx.lineTo(8,15);ctx.stroke();ctx.restore();
     }
     const exitOpen=stageState.keyTaken&&(stageState.switches||[]).filter(Boolean).length>=stageState.requiredSwitches;
-    ctx.fillStyle=exitOpen?"#f5ca68":"#9b6571";ctx.fillRect(876,390,58,110);
-    ctx.fillStyle="#fff0d1";ctx.fillRect(888,405,34,95);ctx.fillStyle="#56434a";ctx.fillRect(901,444,8,8);
-    ctx.fillStyle="#fff";ctx.font="bold 12px Nunito";ctx.fillText(exitOpen?"EXIT OPEN":"LOCKED",875,378);
-    // Always draw the local avatar from local simulation state. Do not make
-    // visibility depend on receiving a server snapshot first.
-    for(const p of players.values()) {
-      if(p.id!==myId) drawCat(p.x,p.y,p.color,p.facing,p.name);
+    if(level.gate){
+      ctx.fillStyle=stageState.gateOpen?"#8cffb455":"#e06b78";ctx.fillRect(level.gate.x,level.gate.y,14,level.gate.h);
+      ctx.fillStyle="#fff";ctx.font="bold 11px Nunito";ctx.fillText(stageState.gateOpen?"GATE OPEN":"SEALED GATE",level.gate.x-28,level.gate.y-12);
     }
-    if(joined) drawCat(me.x,me.y,me.color,me.facing,"YOU");
-    ctx.fillStyle="#f4f7ff";ctx.font="bold 13px Nunito";ctx.fillText("TEAMWORK REQUIRED  •  20 ROOMS",20,28);
-    ctx.fillStyle="#ffffffaa";ctx.font="11px Nunito";ctx.fillText("Long route  →  Switches  →  Rescue teammates  →  Far exit",20,47); $("rescueBtn").classList.toggle("hidden",!me.trapped);
+    if(level.rescuePoint){
+      ctx.fillStyle="#69e7ff";ctx.shadowColor="#69e7ff";ctx.shadowBlur=18;ctx.beginPath();ctx.arc(level.rescuePoint.x,level.rescuePoint.y-8,13,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
+      ctx.fillStyle="#10253a";ctx.font="bold 12px Nunito";ctx.fillText("R",level.rescuePoint.x-4,level.rescuePoint.y-4);
+      ctx.fillStyle="#eaf7ff";ctx.font="bold 10px Nunito";ctx.fillText("RESCUE",level.rescuePoint.x-22,level.rescuePoint.y-30);
+    }
+    ctx.fillStyle=exitOpen?"#f5ca68":"#9b6571";ctx.fillRect(level.exit.x-24,390,58,110);
+    ctx.fillStyle="#fff0d1";ctx.fillRect(level.exit.x-12,405,34,95);ctx.fillStyle="#56434a";ctx.fillRect(level.exit.x+1,444,8,8);
+    ctx.fillStyle="#fff";ctx.font="bold 12px Nunito";ctx.fillText(exitOpen?"EXIT OPEN":"LOCKED",level.exit.x-25,378);
+    for(const p of players.values()){if(p.id!==myId)drawCat(p.x,p.y,p.color,p.facing,p.name);}
+    if(joined)drawCat(me.x,me.y,me.color,me.facing,"YOU");
+    ctx.restore();
+    ctx.fillStyle="#f4f7ff";ctx.font="bold 13px Nunito";ctx.fillText("TEAMWORK REQUIRED  •  20 LONG ROOMS",20,28);
+    ctx.fillStyle="#ffffffaa";ctx.font="11px Nunito";ctx.fillText("Long route  →  Switches  →  Rescue teammates  →  Far exit",20,47);
+    $("rescueBtn").classList.toggle("hidden",!me.trapped);
   }
   function drawCat(x,y,color,facing,name) {
     ctx.save();ctx.translate(x+13.5,y+14.5);ctx.scale(facing||1,1);
