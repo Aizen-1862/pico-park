@@ -49,6 +49,17 @@
     connect("join", code);
   };
   $("roomCode").addEventListener("input",e=>e.target.value=e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,""));
+  const fullscreenBtn=$("fullscreenBtn");
+  function syncFullscreenLabel(){fullscreenBtn.textContent=document.fullscreenElement?"⤢ EXIT":"⛶ FULL";}
+  fullscreenBtn.onclick=async()=>{
+    try {
+      if(!document.fullscreenElement) await $("game").requestFullscreen();
+      else await document.exitFullscreen();
+      if(screen.orientation?.lock && !document.fullscreenElement) screen.orientation.unlock?.();
+    } catch { showError("Fullscreen isn't available in this browser. Try your browser menu."); }
+    syncFullscreenLabel();
+  };
+  document.addEventListener("fullscreenchange",syncFullscreenLabel);
   $("copyCode").onclick = async () => {
     try { await navigator.clipboard.writeText(roomCode); $("copyCode").textContent = "COPIED"; }
     catch { $("copyCode").textContent = roomCode; }
@@ -106,10 +117,16 @@
     ctx.fillStyle="#a9e6a1";ctx.fillRect(p.x,p.y,p.w,6);
     ctx.fillStyle="#182a39";for(let x=p.x+10;x<p.x+p.w-5;x+=22)ctx.fillRect(x,p.y+11,9,4);
   }
+  function roundedRect(x,y,w,h,r) {
+    r=Math.min(r,w/2,h/2);
+    ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);
+    ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);
+    ctx.arcTo(x,y,x+w,y,r);ctx.closePath();
+  }
   function drawSwitch(sw,active,index) {
     ctx.save();ctx.translate(sw.x,sw.y);
     ctx.fillStyle=active?"#9cffbd":"#42566b";ctx.shadowColor=active?"#8cffb4":"#000";ctx.shadowBlur=active?18:4;
-    ctx.beginPath();ctx.roundRect(-17,-7,34,14,5);ctx.fill();
+    roundedRect(-17,-7,34,14,5);ctx.fill();
     ctx.shadowBlur=0;ctx.fillStyle=active?"#f4fff5":"#aebdca";ctx.beginPath();ctx.arc(0,-1,5,0,Math.PI*2);ctx.fill();
     ctx.fillStyle="#eaf5ff";ctx.font="bold 10px Nunito";ctx.textAlign="center";ctx.fillText("S"+(index+1),0,-17);ctx.restore();
   }
@@ -130,15 +147,20 @@
     ctx.fillStyle=exitOpen?"#f5ca68":"#9b6571";ctx.fillRect(876,390,58,110);
     ctx.fillStyle="#fff0d1";ctx.fillRect(888,405,34,95);ctx.fillStyle="#56434a";ctx.fillRect(901,444,8,8);
     ctx.fillStyle="#fff";ctx.font="bold 12px Nunito";ctx.fillText(exitOpen?"EXIT OPEN":"LOCKED",875,378);
-    for(const p of players.values())if(p.id!==myId)drawCat(p.x,p.y,p.color,p.facing,p.name);
-    if(myId)drawCat(me.x,me.y,me.color,me.facing,"YOU");
+    // Render every player from the latest server snapshot; always show our own avatar too.
+    for(const p of players.values()) {
+      const local=p.id===myId;
+      drawCat(local?me.x:p.x,local?me.y:p.y,p.color,p.facing,local?"YOU":p.name);
+    }
+    // A short-lived fallback keeps the local character visible while the first state packet arrives.
+    if(myId && !players.has(myId)) drawCat(me.x,me.y,me.color,me.facing,"YOU");
     ctx.fillStyle="#f4f7ff";ctx.font="bold 13px Nunito";ctx.fillText("TEAMWORK REQUIRED  •  20 ROOMS",20,28);
     ctx.fillStyle="#ffffffaa";ctx.font="11px Nunito";ctx.fillText("Collect the key  →  Hold switches  →  Everyone reaches the door",20,47);
   }
   function drawCat(x,y,color,facing,name) {
     ctx.save();ctx.translate(x+13.5,y+14.5);ctx.scale(facing||1,1);
     ctx.fillStyle="#0005";ctx.beginPath();ctx.ellipse(0,17,15,4,0,0,7);ctx.fill();
-    ctx.fillStyle=color;ctx.beginPath();ctx.roundRect(-13,-10,26,25,8);ctx.fill();
+    ctx.fillStyle=color;roundedRect(-13,-10,26,25,8);ctx.fill();
     ctx.beginPath();ctx.moveTo(-10,-7);ctx.lineTo(-11,-19);ctx.lineTo(-2,-12);ctx.moveTo(10,-7);ctx.lineTo(11,-19);ctx.lineTo(2,-12);ctx.fill();
     ctx.fillStyle="#fff";ctx.beginPath();ctx.arc(-5,-1,3.2,0,7);ctx.arc(5,-1,3.2,0,7);ctx.fill();
     ctx.fillStyle="#253347";ctx.beginPath();ctx.arc(-4,-1,1.4,0,7);ctx.arc(6,-1,1.4,0,7);ctx.fill();
