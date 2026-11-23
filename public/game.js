@@ -3,7 +3,7 @@
   const canvas = $("world"), ctx = canvas.getContext("2d");
   const W = 960, H = 540, levels = window.CATNAP_LEVELS;
   let socket, myId = null, roomCode = "", players = new Map(), stageNo = 1;
-  let stageState = {}, me = {x:48,y:460,vx:0,vy:0,facing:1,onGround:false,color:"#ff6b6b"};
+  let stageState = {}, me = {x:48,y:460,vx:0,vy:0,facing:1,onGround:false,color:"#ff6b6b",trapped:false};
   const keys = new Set(); let lastSend = 0, raf = 0, joined = false;
   const send = data => { if (socket && socket.readyState === WebSocket.OPEN) socket.send(JSON.stringify(data)); };
   function showError(message) { $("lobbyError").textContent = message || ""; }
@@ -21,7 +21,7 @@
         if (raf) cancelAnimationFrame(raf); loop(performance.now());
       }
       if (msg.type === "state") {
-        stageNo = msg.stage; stageState = msg;
+        stageNo = msg.stage; stageState = msg; me.trapped = (msg.trappedPlayers || []).includes(myId);
         players = new Map(msg.players.map(p => [p.id,p]));
         const mine = players.get(myId);
         if (mine) { me.color = mine.color; }
@@ -83,7 +83,7 @@
     b.addEventListener("pointerdown",down); b.addEventListener("pointerup",up);
     b.addEventListener("pointerleave",up); b.addEventListener("pointercancel",up);
   }
-  bindHold("leftBtn","arrowleft"); bindHold("rightBtn","arrowright"); bindHold("jumpBtn"," ");
+  bindHold("leftBtn","arrowleft"); bindHold("rightBtn","arrowright"); bindHold("jumpBtn"," "); $("rescueBtn").addEventListener("click",()=>send({type:"rescue"})); window.addEventListener("keydown",e=>{if(e.key.toLowerCase()==="e")send({type:"rescue"});});
 
   function currentLevel() { return levels[Math.max(0,Math.min(19,stageNo-1))]; }
   function collideX(nx, platforms) {
@@ -100,15 +100,15 @@
   }
   function update(dt) {
     if (!joined || stageState.stageClear || stageState.won) return;
-    const platforms=currentLevel().platforms;
+    const level=currentLevel(), platforms=level.platforms; if(me.trapped){me.vx=0;me.vy=0;return;}
     const left=keys.has("arrowleft")||keys.has("a"), right=keys.has("arrowright")||keys.has("d");
     const jump=keys.has(" ")||keys.has("arrowup")||keys.has("w");
     me.vx=left?-245:right?245:0; if(me.vx)me.facing=me.vx>0?1:-1;
-    const nx=Math.max(0,Math.min(W-27,me.x+me.vx*dt)); if(!collideX(nx,platforms))me.x=nx;
+    const nx=Math.max(0,Math.min(level.worldWidth-27,me.x+me.vx*dt)); if(!collideX(nx,platforms))me.x=nx;
     if(jump&&me.onGround){me.vy=-535;me.onGround=false;}
     me.vy=Math.min(780,me.vy+1450*dt);
     const ny=me.y+me.vy*dt; me.onGround=false; if(!collideY(ny,platforms))me.y=ny;
-    if(me.y>H+80){me.x=48;me.y=460;me.vy=0;}
+    if(me.y>H+80){me.x=Math.max(48,me.x-220);me.y=460;me.vy=0;}
     const now=performance.now();
     if(now-lastSend>40){send({type:"move",x:me.x,y:me.y,facing:me.facing});lastSend=now;}
   }
@@ -131,12 +131,12 @@
     ctx.fillStyle="#eaf5ff";ctx.font="bold 10px Nunito";ctx.textAlign="center";ctx.fillText("S"+(index+1),0,-17);ctx.restore();
   }
   function draw() {
-    const level=currentLevel(), t=performance.now();
+    const level=currentLevel(), t=performance.now(); const cameraX=Math.max(0,Math.min(level.worldWidth-W,me.x-390));
     const sky=ctx.createLinearGradient(0,0,0,H);sky.addColorStop(0,"#182b46");sky.addColorStop(1,"#355c69");
     ctx.fillStyle=sky;ctx.fillRect(0,0,W,H);
     ctx.fillStyle="#ffffff12";for(let i=0;i<55;i++){const x=(i*173)%W,y=(i*79)%300;ctx.fillRect(x,y,2,2);}
     ctx.fillStyle="#8ac6a0";ctx.beginPath();ctx.moveTo(0,490);ctx.quadraticCurveTo(250,440,470,490);ctx.quadraticCurveTo(720,430,960,485);ctx.lineTo(960,540);ctx.lineTo(0,540);ctx.fill();
-    level.platforms.forEach(drawPlatform);
+    ctx.save();ctx.translate(-cameraX,0);level.platforms.forEach(drawPlatform);
     level.switches.forEach((sw,i)=>drawSwitch(sw,!!(stageState.switches||[])[i],i));
     if(!stageState.keyTaken){
       ctx.save();ctx.translate(level.key.x,level.key.y+Math.sin(t/240)*5);ctx.rotate(-.2);
@@ -154,7 +154,7 @@
     }
     if(joined) drawCat(me.x,me.y,me.color,me.facing,"YOU");
     ctx.fillStyle="#f4f7ff";ctx.font="bold 13px Nunito";ctx.fillText("TEAMWORK REQUIRED  •  20 ROOMS",20,28);
-    ctx.fillStyle="#ffffffaa";ctx.font="11px Nunito";ctx.fillText("Collect the key  →  Hold switches  →  Everyone reaches the door",20,47);
+    ctx.fillStyle="#ffffffaa";ctx.font="11px Nunito";ctx.fillText("Long route  →  Switches  →  Rescue teammates  →  Far exit",20,47); $("rescueBtn").classList.toggle("hidden",!me.trapped);
   }
   function drawCat(x,y,color,facing,name) {
     ctx.save();ctx.translate(x+13.5,y+14.5);ctx.scale(facing||1,1);
