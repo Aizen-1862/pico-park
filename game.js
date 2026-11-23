@@ -163,7 +163,7 @@
     ctx.restore();
     ctx.fillStyle="#f4f7ff";ctx.font="bold 13px Nunito";ctx.fillText("TEAMWORK REQUIRED  •  20 LONG ROOMS",20,28);
     ctx.fillStyle="#ffffffaa";ctx.font="11px Nunito";ctx.fillText("Long route  →  Switches  →  Rescue teammates  →  Far exit",20,47);
-    $("rescueBtn").classList.toggle("hidden",!me.trapped);
+    $("rescueBtn").classList.toggle("hidden",!((stageState.trappedPlayers||[]).length>0&&!me.trapped));
   }
   function drawCat(x,y,color,facing,name) {
     ctx.save();ctx.translate(x+13.5,y+14.5);ctx.scale(facing||1,1);
