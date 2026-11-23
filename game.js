@@ -147,20 +147,19 @@
     ctx.fillStyle=exitOpen?"#f5ca68":"#9b6571";ctx.fillRect(876,390,58,110);
     ctx.fillStyle="#fff0d1";ctx.fillRect(888,405,34,95);ctx.fillStyle="#56434a";ctx.fillRect(901,444,8,8);
     ctx.fillStyle="#fff";ctx.font="bold 12px Nunito";ctx.fillText(exitOpen?"EXIT OPEN":"LOCKED",875,378);
-    // Render every player from the latest server snapshot; always show our own avatar too.
+    // Always draw the local avatar from local simulation state. Do not make
+    // visibility depend on receiving a server snapshot first.
     for(const p of players.values()) {
-      const local=p.id===myId;
-      drawCat(local?me.x:p.x,local?me.y:p.y,p.color,p.facing,local?"YOU":p.name);
+      if(p.id!==myId) drawCat(p.x,p.y,p.color,p.facing,p.name);
     }
-    // A short-lived fallback keeps the local character visible while the first state packet arrives.
-    if(myId && !players.has(myId)) drawCat(me.x,me.y,me.color,me.facing,"YOU");
+    if(joined) drawCat(me.x,me.y,me.color,me.facing,"YOU");
     ctx.fillStyle="#f4f7ff";ctx.font="bold 13px Nunito";ctx.fillText("TEAMWORK REQUIRED  •  20 ROOMS",20,28);
     ctx.fillStyle="#ffffffaa";ctx.font="11px Nunito";ctx.fillText("Collect the key  →  Hold switches  →  Everyone reaches the door",20,47);
   }
   function drawCat(x,y,color,facing,name) {
     ctx.save();ctx.translate(x+13.5,y+14.5);ctx.scale(facing||1,1);
     ctx.fillStyle="#0005";ctx.beginPath();ctx.ellipse(0,17,15,4,0,0,7);ctx.fill();
-    ctx.fillStyle=color;roundedRect(-13,-10,26,25,8);ctx.fill();
+    ctx.fillStyle=color;roundedRect(-13,-10,26,25,8);ctx.fill();ctx.lineWidth=2.5;ctx.strokeStyle="#172536";ctx.stroke();
     ctx.beginPath();ctx.moveTo(-10,-7);ctx.lineTo(-11,-19);ctx.lineTo(-2,-12);ctx.moveTo(10,-7);ctx.lineTo(11,-19);ctx.lineTo(2,-12);ctx.fill();
     ctx.fillStyle="#fff";ctx.beginPath();ctx.arc(-5,-1,3.2,0,7);ctx.arc(5,-1,3.2,0,7);ctx.fill();
     ctx.fillStyle="#253347";ctx.beginPath();ctx.arc(-4,-1,1.4,0,7);ctx.arc(6,-1,1.4,0,7);ctx.fill();
