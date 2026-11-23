@@ -31,7 +31,7 @@ function roomState(room) {
   return {
     type: "state", room: room.code, stage: room.stageIndex + 1,
     totalStages: LEVELS.length, stageName: stage.name, hint: stage.hint,
-    keyTaken: room.keyTaken, switches, requiredSwitches: requiredFor(room), gateOpen: !!room.gateOpen, trappedPlayers: [...room.players.values()].filter(p=>p.trapped).map(p=>p.id),
+    keyTaken: room.keyTaken, switches, requiredSwitches: requiredFor(room), gateOpen: !!room.gateOpen, trappedPlayers: [...room.players.values()].filter(p=>p.trapped).map(p=>p.id), gateOpen: !!room.gateOpen, trappedPlayers: [...room.players.values()].filter(p=>p.trapped).map(p=>p.id),
     stageClear: room.stageClear, won: room.won,
     players: [...room.players.values()].map(p => ({
       id: p.id, name: p.name, color: p.color, x: p.x, y: p.y, facing: p.facing
@@ -42,7 +42,7 @@ function broadcast(room) { const state = roomState(room); for (const p of room.p
 function resetStage(room) {
   room.keyTaken = false; room.stageClear = false; room.gateOpen = false; room.switchOwners = Array(4).fill(null);
   let i = 0;
-  for (const p of room.players.values()) { p.x = 48 + i++ * 38; p.y = 460; p.facing = 1; }
+  for (const p of room.players.values()) { p.x = 48 + i++ * 38; p.y = 460; p.facing = 1; p.trapped = false; }
 }
 function leave(ws) {
   const room = rooms.get(ws.roomCode);
@@ -94,7 +94,7 @@ wss.on("connection", ws => {
         if (room.stageIndex === LEVELS.length - 1) room.won = true;
       }
       broadcast(room);
-    } else if (msg.type === "rescue" && !room.stageClear && !room.won) {\n      const point = LEVELS[room.stageIndex].rescuePoint;\n      if (point && Math.hypot((player.x + 13.5) - point.x, (player.y + 14.5) - point.y) < 75) {\n        const captive = [...room.players.values()].find(p => p.trapped);\n        if (captive) { captive.trapped = false; broadcast(room); }\n      }\n    } else if (msg.type === "next" && room.stageClear && !room.won) {
+    } else if (msg.type === "rescue" && !room.stageClear && !room.won) {\n      const point = LEVELS[room.stageIndex].rescuePoint;\n      if (point && Math.hypot((player.x + 13.5) - point.x, (player.y + 14.5) - point.y) < 75) {\n        const captive = [...room.players.values()].find(p => p.trapped);\n        if (captive) { captive.trapped = false; broadcast(room); }\n      }\n    } else if (msg.type === "rescue" && !room.stageClear && !room.won) {\n      const point = LEVELS[room.stageIndex].rescuePoint;\n      if (point && Math.hypot((player.x + 13.5) - point.x, (player.y + 14.5) - point.y) < 75) {\n        const captive = [...room.players.values()].find(p => p.trapped);\n        if (captive) { captive.trapped = false; broadcast(room); }\n      }\n    } else if (msg.type === "next" && room.stageClear && !room.won) {
       room.stageIndex = Math.min(LEVELS.length - 1, room.stageIndex + 1);
       resetStage(room); broadcast(room);
     } else if (msg.type === "restart") {
