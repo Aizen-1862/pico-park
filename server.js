@@ -16,16 +16,14 @@ const COLORS = ["#ff6b6b", "#55c7ff", "#ffd166", "#8ce99a", "#c99bff", "#ff9fce"
 function code() { return crypto.randomBytes(3).toString("hex").toUpperCase(); }
 function send(ws, data) { if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify(data)); }
 function requiredFor(room) { return Math.min(4, Math.max(1, Math.ceil(room.players.size / 2))); }
-function activeSwitches(room) {
+function activeSwitches(room) { return room.switchOwners.map(Boolean); }
+function claimSwitch(room, player) {
+  if (room.switchOwners.includes(player.id)) return;
   const stage = LEVELS[room.stageIndex];
-  const usedPlayers = new Set();
-  return stage.switches.map((sw, index) => {
-    const player = [...room.players.values()].find(p =>
-      !usedPlayers.has(p.id) && Math.hypot((p.x + 13.5) - sw.x, (p.y + 14.5) - sw.y) < 39
-    );
-    if (player) usedPlayers.add(player.id);
-    return Boolean(player);
-  });
+  const index = stage.switches.findIndex((sw, i) =>
+    !room.switchOwners[i] && Math.hypot((player.x + 13.5) - sw.x, (player.y + 14.5) - sw.y) < 39
+  );
+  if (index !== -1) room.switchOwners[index] = player.id;
 }
 function roomState(room) {
   const stage = LEVELS[room.stageIndex];
@@ -42,7 +40,7 @@ function roomState(room) {
 }
 function broadcast(room) { const state = roomState(room); for (const p of room.players.values()) send(p.ws, state); }
 function resetStage(room) {
-  room.keyTaken = false; room.stageClear = false;
+  room.keyTaken = false; room.stageClear = false; room.switchOwners = Array(4).fill(null);
   let i = 0;
   for (const p of room.players.values()) { p.x = 48 + i++ * 38; p.y = 460; p.facing = 1; }
 }
@@ -50,6 +48,7 @@ function leave(ws) {
   const room = rooms.get(ws.roomCode);
   if (!room) return;
   room.players.delete(ws.playerId);
+  room.switchOwners = room.switchOwners.map(owner => owner === ws.playerId ? null : owner);
   if (!room.players.size) rooms.delete(room.code);
   else broadcast(room);
   ws.roomCode = null; ws.playerId = null;
@@ -64,7 +63,7 @@ wss.on("connection", ws => {
       let room;
       if (msg.type === "create") {
         let id = code(); while (rooms.has(id)) id = code();
-        room = { code: id, players: new Map(), stageIndex: 0, keyTaken: false, stageClear: false, won: false };
+        room = { code: id, players: new Map(), stageIndex: 0, keyTaken: false, switchOwners: Array(4).fill(null), stageClear: false, won: false };
         rooms.set(id, room);
       } else {
         room = rooms.get(String(msg.code || "").trim().toUpperCase());
@@ -87,6 +86,7 @@ wss.on("connection", ws => {
       player.facing = msg.facing === -1 ? -1 : 1;
       const stage = LEVELS[room.stageIndex];
       if (!room.keyTaken && Math.hypot((player.x + 13.5) - stage.key.x, (player.y + 14.5) - stage.key.y) < 38) room.keyTaken = true;
+      claimSwitch(room, player);
       const switches = activeSwitches(room);
       if (room.keyTaken && switches.filter(Boolean).length >= requiredFor(room) &&
           [...room.players.values()].every(p => p.x > 850 && p.y > 420)) {
